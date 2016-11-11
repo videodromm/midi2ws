@@ -3,14 +3,16 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	// websocket client
-	client.connect("localhost:8088");
+	//client.connect("192.168.0.18:8088");
 
     // 1 - get default options
-//    ofxLibwebsockets::ClientOptions options = ofxLibwebsockets::defaultClientOptions();
+    ofxLibwebsockets::ClientOptions options = ofxLibwebsockets::defaultClientOptions();
     
     // 2 - set basic params
-//    options.host = "echo.websocket.org";
-    
+    options.host = "192.168.0.18";
+    options.port = 8088;
+	// options.bUseSSL = false; // you'll have to manually accept this self-signed cert if 'true'!
+
     // advanced: set keep-alive timeouts for events like
     // loss of internet
     
@@ -18,12 +20,12 @@ void ofApp::setup(){
     // BIG GOTCHA: on BSD systems, e.g. Mac OS X, these time params are system-wide
     // ...so ka_time just says "check if alive when you want" instead of "check if
     // alive after X seconds"
-//    options.ka_time     = 1;
-//    options.ka_probes   = 1;
-//    options.ka_interval = 1;=
+    options.ka_time     = 1;
+    options.ka_probes   = 1;
+    options.ka_interval = 1;
     
     // 4 - connect
-//    client.connect(options);
+    client.connect(options);
 
 	text.str(""); // clear
 	text << (client.isConnected() ? "Client is connected" : "Client disconnected");
@@ -71,29 +73,19 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
-
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-
-	/*for (int i = messages.size() - 1; i >= 0; i--){
-		text.str(""); // clear
-		text << messages[i];
-		cout << text.str();
-	}
-	if (messages.size() > NUM_MESSAGES) messages.erase(messages.begin());*/
-
-	ofSetColor(150, 0, 0);
 	// midi
 	int name = 0;
-	int value = 0;
+	float value = 0;
 	switch (midiMessage.status)
 	{
 	case MIDI_CONTROL_CHANGE:
 		name = midiMessage.control;
 		value = midiMessage.value;
+		text.str(""); // clear
+		normalizedValue = value / 127;
+		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
+		if (name != 0) client.send(text.str());
+		cout << "cc " << value << endl;
 		break;
 	case MIDI_NOTE_ON:
 		name = midiMessage.pitch;
@@ -103,12 +95,21 @@ void ofApp::draw(){
 		normalizedValue = value / 127;
 		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
 		if (name != 0) client.send(text.str());
+		cout << " ctrl "  << midiMessage.control << " val "  << midiMessage.value << " on "  << value << endl;
 		break;
 	case MIDI_NOTE_OFF:
 		name = midiMessage.pitch;
 		value = midiMessage.velocity;
 		break;
+	default:
+		//cout << "not implemented status "  << midiMessage.status << " val "  << midiMessage.value << " ctrl "  << midiMessage.control << endl;
+		break;
 	}
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+
 }
 
 //--------------------------------------------------------------
@@ -130,7 +131,7 @@ void ofApp::onClose(ofxLibwebsockets::Event& args){
 
 //--------------------------------------------------------------
 void ofApp::onIdle(ofxLibwebsockets::Event& args){
-	cout << "on idle" << endl;
+	//cout << "on idle" << endl;
 }
 
 //--------------------------------------------------------------
@@ -146,7 +147,7 @@ void ofApp::onMessage(ofxLibwebsockets::Event& args){
 	}
 
 	// echo server = send message right back!
-	args.conn.send(args.message);
+	//args.conn.send(args.message);
 }
 
 //--------------------------------------------------------------
@@ -162,7 +163,8 @@ void ofApp::keyPressed(int key){
 		exit();
 		break;
 	default:
-	    client.send("Hello");
+		cout << key;
+	    //client.send("Hello");
 		break;
 	}
 }
