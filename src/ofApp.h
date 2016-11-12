@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 #include "ofxLibwebsockets.h"
-#include "ofxJSON.h"
+#include "ofxXmlSettings.h"
 
 #define NUM_MESSAGES 30 // how many past messages we want to keep
 
@@ -56,9 +56,9 @@ public:
 
     stringstream text;
 
-    // json settings
-    ofxJSONElement settings;
-    std::string settingsFile;
+    // xml settings
+    ofxXmlSettings settings;
+    string settingsFile;
     string host;
     unsigned int port;
 };

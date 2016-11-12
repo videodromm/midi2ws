@@ -1,3 +1,3 @@
-ofxJSON
+ofxXmlSettings
 ofxMidi
 ofxLibwebsockets

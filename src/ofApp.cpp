@@ -8,20 +8,22 @@ void ofApp::setup(){
 	port = 8088;
 	name = previousName = 0;
 	value = previousValue = 0.0;
-	// json settings
-	settingsFile = "vdsettings.json";
 
-	if (settings.open(settingsFile)) {
-		host = settings["host"].asString();
-		port = settings["port"].asInt();
+	// XML
+	settingsFile = "vdsettings.xml";
+	if (settings.loadFile(settingsFile)) {
+		settings.pushTag("settings");
+		host = settings.getValue("host", "localhost");
+		port = settings.getValue("port", 8088);
+		settings.popTag();
 	} else {
-		ofLog() << "json file does not exist, loading default values";
-
-		settings["host"] = host;
-		settings["port"] = port;
-
+		ofLog() << "XML error, loading default values";
+		settings.pushTag("settings");
+		settings.setValue("host", host);
+		settings.setValue("port", "8088");
+		settings.popTag();
 		// save settings
-		settings.save(settingsFile);
+		settings.saveFile(settingsFile);
 	}
 
 	// websocket client
@@ -179,7 +181,7 @@ void ofApp::keyPressed(int key){
 		break;
 	case 's':
 		// save settings
-		settings.save(settingsFile);
+		settings.saveFile(settingsFile);
 		break;
 	default:
 		cout << key;
@@ -219,7 +221,7 @@ void ofApp::exit() {
 	midiIn.closePort();
 	midiIn.removeListener(this);
 	// save settings
-	settings.save(settingsFile);
+	settings.saveFile(settingsFile);
 
 }
 //--------------------------------------------------------------
