@@ -8,20 +8,20 @@ void ofApp::setup(){
 	port = 8088;
 	name = previousName = 0;
 	value = previousValue = 0.0;
-	// XML
-	if (settings.loadFile("vdsettings.xml") == false) {
-		ofLog() << "XML error, loading default values";
-		settings.pushTag("settings");
-		host = settings.getValue("host", "localhost");
-		port = settings.getValue("port", 8088);
-		settings.popTag();
+	// json settings
+	settingsFile = "vdsettings.json";
+
+	if (settings.open(settingsFile)) {
+		host = settings["host"].asString();
+		port = settings["port"].asInt();
 	} else {
-		settings.pushTag("settings");
-		settings.setValue("host", host);
-		settings.setValue("port", port);
-		settings.popTag();
+		ofLog() << "json file does not exist, loading default values";
+
+		settings["host"] = host;
+		settings["port"] = port;
+
 		// save settings
-		settings.saveFile("vdsettings.xml");
+		settings.save(settingsFile);
 	}
 
 	// websocket client
@@ -116,7 +116,7 @@ void ofApp::update(){
 		normalizedValue = value / 127;
 		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
 		if (name != 0) client.send(text.str());
-		cout << " ctrl "  << midiMessage.control << " val "  << midiMessage.value << " pitch "  << vamidiMessage.pitch << " velocity "  << midiMessage.velocity << endl;
+		cout << " ctrl "  << midiMessage.control << " val "  << midiMessage.value << " pitch "  << midiMessage.pitch << " velocity "  << midiMessage.velocity << endl;
 		previousName = name;
 		previousValue = value;
 	}
@@ -179,7 +179,7 @@ void ofApp::keyPressed(int key){
 		break;
 	case 's':
 		// save settings
-		settings.saveFile("vdsettings.xml");
+		settings.save(settingsFile);
 		break;
 	default:
 		cout << key;
@@ -219,7 +219,7 @@ void ofApp::exit() {
 	midiIn.closePort();
 	midiIn.removeListener(this);
 	// save settings
-	settings.saveFile("vdsettings.xml");
+	settings.save(settingsFile);
 
 }
 //--------------------------------------------------------------
