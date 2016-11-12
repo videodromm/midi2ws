@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 #include "ofxLibwebsockets.h"
+#include "ofxXmlSettings.h"
 
 #define NUM_MESSAGES 30 // how many past messages we want to keep
 
@@ -15,7 +16,7 @@ public:
     void update();
     void draw();
 
-    void keyPressed  (int key);
+    void keyPressed(int key);
     void keyReleased(int key);
     void mouseMoved(int x, int y );
     void mouseDragged(int x, int y, int button);
@@ -43,12 +44,20 @@ public:
     void onBroadcast( ofxLibwebsockets::Event& args );
     // midi
     void newMidiMessage(ofxMidiMessage& eventArgs);
-
-    stringstream text;
-
     ofxMidiIn midiIn;
     ofxMidiIn midiInLaunchpad;
     ofxMidiIn midiInNanoKontrol;
     ofxMidiMessage midiMessage;
     float normalizedValue;
+	unsigned int name;
+	float value;
+	unsigned int previousName;
+	float previousValue;
+
+    stringstream text;
+
+    // xml settings
+    ofxXmlSettings settings;
+    string host;
+    unsigned int port;
 };

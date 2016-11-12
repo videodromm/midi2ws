@@ -2,15 +2,35 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	// websocket client
-	//client.connect("192.168.0.18:8088");
+	ofSetEscapeQuitsApp(false);
+	// defaults
+	host = "localhost";
+	port = 8088;
+	name = previousName = 0;
+	value = previousValue = 0.0;
+	// XML
+	if (settings.loadFile("vdsettings.xml") == false) {
+		ofLog() << "XML error, loading default values";
+		settings.pushTag("settings");
+		host = settings.getValue("host", "localhost");
+		port = settings.getValue("port", 8088);
+		settings.popTag();
+	} else {
+		settings.pushTag("settings");
+		settings.setValue("host", host);
+		settings.setValue("port", port);
+		settings.popTag();
+		// save settings
+		settings.saveFile("vdsettings.xml");
+	}
 
+	// websocket client
     // 1 - get default options
     ofxLibwebsockets::ClientOptions options = ofxLibwebsockets::defaultClientOptions();
     
     // 2 - set basic params
-    options.host = "192.168.0.18";
-    options.port = 8088;
+    options.host = host;
+    options.port = port;
 	// options.bUseSSL = false; // you'll have to manually accept this self-signed cert if 'true'!
 
     // advanced: set keep-alive timeouts for events like
@@ -34,9 +54,6 @@ void ofApp::setup(){
 	// this adds your app as a listener for the server
 	client.addListener(this);
 
-	ofBackground(0);
-	ofSetFrameRate(60);
-	ofSetWindowPosition(10, 100);
 	// midi
 	// print input ports to console
 	midiIn.listPorts(); // via instance
@@ -74,28 +91,15 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	// midi
-	int name = 0;
-	float value = 0;
 	switch (midiMessage.status)
 	{
 	case MIDI_CONTROL_CHANGE:
 		name = midiMessage.control;
 		value = midiMessage.value;
-		text.str(""); // clear
-		normalizedValue = value / 127;
-		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
-		if (name != 0) client.send(text.str());
-		cout << "cc " << value << endl;
 		break;
 	case MIDI_NOTE_ON:
 		name = midiMessage.pitch;
 		value = midiMessage.velocity;
-		text.str(""); // clear
-		// lmap<float>(value, 0.0, 127.0, 0.0, 1.0) (from Cinder)
-		normalizedValue = value / 127;
-		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
-		if (name != 0) client.send(text.str());
-		cout << " ctrl "  << midiMessage.control << " val "  << midiMessage.value << " on "  << value << endl;
 		break;
 	case MIDI_NOTE_OFF:
 		name = midiMessage.pitch;
@@ -104,6 +108,17 @@ void ofApp::update(){
 	default:
 		//cout << "not implemented status "  << midiMessage.status << " val "  << midiMessage.value << " ctrl "  << midiMessage.control << endl;
 		break;
+	}
+	if (name != previousName || value != previousValue) {
+		// only send if value has changed
+		text.str(""); // clear
+		// lmap<float>(value, 0.0, 127.0, 0.0, 1.0) (from Cinder)
+		normalizedValue = value / 127;
+		text << "{\"params\" :[{\"name\" : " << name << ",\"value\" : " << normalizedValue << "}]}";
+		if (name != 0) client.send(text.str());
+		cout << " ctrl "  << midiMessage.control << " val "  << midiMessage.value << " pitch "  << vamidiMessage.pitch << " velocity "  << midiMessage.velocity << endl;
+		previousName = name;
+		previousValue = value;
 	}
 }
 
@@ -158,9 +173,13 @@ void ofApp::onBroadcast(ofxLibwebsockets::Event& args){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	switch (key){
-	case OF_KEY_ESC:
+	case 'q':
 		// quit
 		exit();
+		break;
+	case 's':
+		// save settings
+		settings.saveFile("vdsettings.xml");
 		break;
 	default:
 		cout << key;
@@ -199,6 +218,9 @@ void ofApp::exit() {
 	// clean up
 	midiIn.closePort();
 	midiIn.removeListener(this);
+	// save settings
+	settings.saveFile("vdsettings.xml");
+
 }
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
