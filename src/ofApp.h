@@ -28,7 +28,7 @@ public:
     void exit();
 
     ofxLibwebsockets::Client client;
-
+    ofxLibwebsockets::ClientOptions options;
     // queue of rec'd messages
     vector<string> messages;
 

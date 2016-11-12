@@ -28,7 +28,7 @@ void ofApp::setup(){
 
 	// websocket client
     // 1 - get default options
-    ofxLibwebsockets::ClientOptions options = ofxLibwebsockets::defaultClientOptions();
+    options = ofxLibwebsockets::defaultClientOptions();
     
     // 2 - set basic params
     options.host = host;
@@ -175,6 +175,10 @@ void ofApp::onBroadcast(ofxLibwebsockets::Event& args){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	switch (key){
+	case 'c':
+		// connect ws client
+		client.connect(options);
+		break;
 	case 'q':
 		// quit
 		exit();
